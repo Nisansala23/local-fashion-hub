@@ -13,8 +13,13 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Disable telemetry during the build phase
+# 🌟 GLOBAL FIX: Inject build-safe placeholder keys to satisfy Next.js page generation
+ENV NEXT_PUBLIC_SANITY_PROJECT_ID="dummy_project_id"
+ENV NEXT_PUBLIC_SANITY_DATASET="production"
+ENV STRIPE_SECRET_KEY="sk_test_dummy_mock"
+ENV NEXT_PUBLIC_BASE_URL="http://localhost:3000"
 ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN npm run build
 
 # --- STAGE 3: RUNNER ---
