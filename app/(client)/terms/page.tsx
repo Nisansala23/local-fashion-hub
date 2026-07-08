@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 export default function TermsPage() {
     return (
         <main className="max-w-3xl mx-auto px-4 py-16 space-y-6 bg-white">

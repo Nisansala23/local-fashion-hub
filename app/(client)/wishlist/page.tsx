@@ -7,6 +7,7 @@ import { X, ShoppingCart, Trash2 } from "lucide-react";
 import { useWishlistStore } from "@/store/useWishlistStore";
 import { useCartStore } from "@/store/userCartStore";
 import Container from "@/components/Container";
+export const dynamic = "force-dynamic";
 
 export default function WishlistPage() {
     const wishlist = useWishlistStore((state) => state.wishlist) || [];
