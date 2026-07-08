@@ -19,7 +19,6 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
-          
 
       # 2️⃣ RUN TRIVY SECURITY VULNERABILITY AUDIT ON FILESYSTEM
       - name: Trivy FS Security Scan
@@ -51,3 +50,9 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/local-fashion-hub:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/local-fashion-hub:${{ github.sha }}
+          # 🌟 SECURE INJECTION: Pass the real keys to Docker as build arguments
+          build-args: |
+            NEXT_PUBLIC_SANITY_PROJECT_ID=${{ secrets.NEXT_PUBLIC_SANITY_PROJECT_ID }}
+            NEXT_PUBLIC_SANITY_DATASET=${{ secrets.NEXT_PUBLIC_SANITY_DATASET }}
+            STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+            NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}

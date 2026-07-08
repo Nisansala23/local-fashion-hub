@@ -13,11 +13,17 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# 🌟 GLOBAL FIX: Inject build-safe placeholder keys to satisfy Next.js page generation
-ENV NEXT_PUBLIC_SANITY_PROJECT_ID="dummy_project_id"
-ENV NEXT_PUBLIC_SANITY_DATASET="production"
-ENV STRIPE_SECRET_KEY="sk_test_dummy_mock"
-ENV NEXT_PUBLIC_BASE_URL="http://localhost:3000"
+# 📥 Capture the secure variables passed from the GitHub Actions workflow
+ARG NEXT_PUBLIC_SANITY_PROJECT_ID
+ARG NEXT_PUBLIC_SANITY_DATASET
+ARG STRIPE_SECRET_KEY
+ARG NEXT_PUBLIC_BASE_URL
+
+# ⚙️ Map them into the compiling environment for Next.js build-time validation
+ENV NEXT_PUBLIC_SANITY_PROJECT_ID=$NEXT_PUBLIC_SANITY_PROJECT_ID
+ENV NEXT_PUBLIC_SANITY_DATASET=$NEXT_PUBLIC_SANITY_DATASET
+ENV STRIPE_SECRET_KEY=$STRIPE_SECRET_KEY
+ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run build
