@@ -2,6 +2,7 @@ import { client } from "@/sanity/lib/client";
 import ProductCard from "@/components/ProductCard";
 import Link from "next/link";
 import Image from "next/image";
+export const dynamic = "force-dynamic";
 
 interface Product {
     _id: string;
