@@ -26,7 +26,7 @@ export default async function HomePage() {
       <ProductGrid />
 
       {/* 3. New Horizontal Lookbook Slider Section */}
-      <LatestCollectionSlider products={products} />
+      <LatestCollectionSlider products={products as any[]} />
     </main>
   );
 }
