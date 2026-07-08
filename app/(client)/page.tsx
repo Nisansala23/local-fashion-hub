@@ -4,6 +4,9 @@ import ProductGrid from "@/components/ProductGrid";
 // Import our new horizontal fashion slider component
 import LatestCollectionSlider from "@/components/LatestCollectionSlider";
 
+// 🌟 CRITICAL: Tells Next.js to skip build-time static generation for this landing page
+export const dynamic = "force-dynamic";
+
 // Keeping our optimized GROQ query clean
 const LATEST_PRODUCTS_QUERY = `*[_type == "product"] | order(_createdAt desc)[0...7] {
   ...,
