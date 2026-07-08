@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-
+export const dynamic = "force-dynamic";
 // 🚀 FIX 1: Remove the hardcoded apiVersion string to let Stripe fall back to your account default
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: undefined as any,
