@@ -18,7 +18,7 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v2
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          
 
       # 2️⃣ RUN TRIVY SECURITY VULNERABILITY AUDIT ON FILESYSTEM
       - name: Trivy FS Security Scan
