@@ -56,3 +56,17 @@ jobs:
             NEXT_PUBLIC_SANITY_DATASET=${{ secrets.NEXT_PUBLIC_SANITY_DATASET }}
             STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
             NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
+
+      # 6️⃣ 🤖 AUTOMATED GITOPS UPDATE STEP
+      - name: Update Helm Chart Manifest Image Tag
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Modify the 'tag:' value directly in your values.yaml file matching the Docker SHA
+          sed -i "s/tag:.*/tag: ${{ github.sha }}/g" k8s/local-fashion-chart/values.yaml
+          
+          # Commit the text alteration back to GitHub (ignoring CI iteration triggers)
+          git add k8s/local-fashion-chart/values.yaml
+          git commit -m "chore: auto-update deployment manifest image tag to ${{ github.sha }} [skip ci]"
+          git push origin main
