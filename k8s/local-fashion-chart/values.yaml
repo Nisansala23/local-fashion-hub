@@ -2,7 +2,7 @@ replicaCount: 2 # Spins up two parallel running containers for high availability
 
 image:
   repository: nisansala23/local-fashion-hub # Points directly to your passing pipeline build
-  tag: latest
+  tag: 47fb83a73f2c80a86c56037313d8b9b73d27940a
   pullPolicy: Always
 
 service:
