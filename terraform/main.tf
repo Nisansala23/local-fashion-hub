@@ -1,4 +1,4 @@
-Vterraform {
+terraform {
   required_providers {
     kind = {
       source  = "tehcyx/kind"
@@ -18,7 +18,7 @@ Vterraform {
 # 1️⃣ PROVISION LOCAL MULTI-NODE KUBERNETES CLUSTER (KIND)
 resource "kind_cluster" "local_cluster" {
   name            = "fashion-hub-cluster"
-  kubeconfig_path = expandpath("~/.kube/config")
+  kubeconfig_path = pathexpand("~/.kube/config")
   wait_for_ready  = true
 
   kind_config {

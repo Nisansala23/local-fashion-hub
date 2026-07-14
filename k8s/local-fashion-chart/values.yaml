@@ -1,0 +1,16 @@
+replicaCount: 2 # Spins up two parallel running containers for high availability
+
+image:
+  repository: nisansala23/local-fashion-hub # Points directly to your passing pipeline build
+  tag: latest
+  pullPolicy: Always
+
+service:
+  type: NodePort
+  port: 3000
+  nodePort: 30080 # This matches the exact extra_port_mappings we set up in your Terraform Kind configuration!
+
+# Inject your app's environment variables safely into the container context
+env:
+  NEXT_PUBLIC_BASE_URL: "http://localhost:30080"
+  # You can append dummy variables here for local testing just like the CI pipeline layer
