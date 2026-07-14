@@ -7,11 +7,14 @@ on:
 jobs:
   continuous-integration:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # 1️⃣ RUN QUALITY ASSURANCE VIA SONARQUBE
       - name: SonarQube Code Analysis Scan
