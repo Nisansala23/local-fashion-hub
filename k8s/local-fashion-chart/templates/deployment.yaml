@@ -18,15 +18,14 @@ spec:
       containers:
         - name: fashion-hub
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          
-          resources:
-          requests:
-            cpu: "100m"      # Baseline target (100 millicores)
-            memory: "128Mi"  # Baseline RAM
-          limits:
-            cpu: "500m"      # Maximum allowed CPU burst
-            memory: "512Mi"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            requests:
+              cpu: "100m"      # Baseline target (100 millicores)
+              memory: "128Mi"  # Baseline RAM
+            limits:
+              cpu: "500m"      # Maximum allowed CPU burst
+              memory: "512Mi"  # Maximum allowed RAM burst
           ports:
             - containerPort: 3000
           env:
