@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { X, ShoppingCart, Trash2 } from "lucide-react";
+import { X, ShoppingCart } from "lucide-react";
 import { useWishlistStore } from "@/store/useWishlistStore";
 import { useCartStore } from "@/store/userCartStore";
 import Container from "@/components/Container";

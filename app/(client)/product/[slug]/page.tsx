@@ -18,6 +18,7 @@ import {
     Share2
 } from "lucide-react";
 import ProductImage from "./ProductImage";
+import { SanityImage } from '@/types/sanity'
 
 interface Product {
     _id: string;
@@ -27,7 +28,7 @@ interface Product {
     price: number;
     discount?: number;
     stock: number;
-    images: any[];
+    images: SanityImage[];
     categoryTitle: string;
     sku?: string;
 }

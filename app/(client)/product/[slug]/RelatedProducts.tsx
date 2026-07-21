@@ -8,13 +8,15 @@ import { urlFor } from "@/sanity/lib/image";
 import Container from "@/components/Container";
 import PriceView from "@/components/PriceView";
 
+import { SanityImage } from '@/types/sanity'
+
 interface RelatedProduct {
     _id: string;
     name: string;
     slug: { current: string };
     price: number;
     discount?: number;
-    images: any[];
+    images: SanityImage[];   // ✅ Changed
 }
 
 interface RelatedProductsProps {

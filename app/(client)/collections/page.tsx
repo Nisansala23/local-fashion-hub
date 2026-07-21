@@ -4,15 +4,18 @@ import Link from "next/link";
 import Image from "next/image";
 export const dynamic = "force-dynamic";
 
+import { SanityImage } from '@/types/sanity'
+
 interface Product {
     _id: string;
     name: string;
     price: number;
     stock: number;
-    images: any[];
+    images: SanityImage[];   // ✅ Changed
     slug: { current: string };
     discountPercentage?: number;
 }
+
 
 export default async function CollectionsPage() {
     // Fetch only products where the 'isHotDeal' boolean switch is checked true in Sanity

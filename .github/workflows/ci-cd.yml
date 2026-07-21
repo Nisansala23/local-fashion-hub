@@ -40,6 +40,7 @@ jobs:
 
       - name: 🧹 ESLint Check
         run: npm run lint
+         
 
       - name: 📊 SonarQube Analysis
         uses: SonarSource/sonarqube-scan-action@v2

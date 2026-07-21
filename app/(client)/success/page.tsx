@@ -44,7 +44,7 @@ function SuccessPageContent() {
             </h1>
 
             <p className="text-gray-500 text-sm font-medium leading-relaxed max-w-md mb-6">
-                Thank you for your purchase. We're processing your order and will ship it soon.
+                Thank you for your purchase. We&apos;re processing your order and will ship it soon.
                 A confirmation email with your order details will be sent to your inbox shortly.
             </p>
 
@@ -59,11 +59,11 @@ function SuccessPageContent() {
             {/* "What's Next?" Nested Informational Panel */}
             <div className="w-full border border-gray-100 rounded-xl p-5 mb-8 text-center space-y-2.5 bg-white">
                 <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">
-                    What's Next?
+                    What&apos;s Next?
                 </h3>
                 <div className="text-xs text-gray-400 font-medium space-y-1">
                     <p>Check your email for order confirmation</p>
-                    <p>We'll notify you when your order ships</p>
+                    <p>We&apos;ll you when your order ships</p>
                     <p>Track your order status anytime</p>
                 </div>
             </div>

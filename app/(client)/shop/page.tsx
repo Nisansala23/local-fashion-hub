@@ -1,21 +1,8 @@
 import { client } from "@/sanity/lib/client";
 import ProductCard from "@/components/ProductCard";
+import { Category, Product } from '@/types/sanity'
 
-interface Category {
-    _id: string;
-    title: string;
-    slug: { current: string };
-}
 
-interface Product {
-    _id: string;
-    name: string;
-    price: number;
-    stock: number;
-    images: any[];
-    slug: { current: string };
-    categoryTitle?: string;
-}
 
 interface SearchParams {
     category?: string;
@@ -39,7 +26,7 @@ export default async function ShopPage({ searchParams }: Props) {
   }`;
 
     // 2. Dynamically construct the Sanity GROQ query based on both category and price constraints
-    let filterConditions = ['_type == "product"'];
+    const filterConditions = ['_type == "product"'];
 
     if (activeCategorySlug !== "all") {
         filterConditions.push('category->slug.current == $categorySlug');
