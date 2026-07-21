@@ -1,6 +1,5 @@
 import { sanityFetch } from "@/sanity/lib/live";
 
-import { Product } from '@/types/sanity'
 
 import HomeBanner from "@/components/HomeBanner";
 import ProductGrid from "@/components/ProductGrid";
@@ -32,7 +31,7 @@ export default async function HomePage() {
       <ProductGrid />
 
       {/* 3. New Horizontal Lookbook Slider Section */}
-      <LatestCollectionSlider products={products as Product[]} />
+      <LatestCollectionSlider products={products as any[]} />
     </main>
   );
 }
