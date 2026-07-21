@@ -1,0 +1,66 @@
+# ══════════════════════════════════════════════════════════════
+# PRODUCTION VALUES - Overrides for Production Environment
+# ══════════════════════════════════════════════════════════════
+
+app:
+  namespace: fashion-hub-prod
+
+image:
+  # ✅ Use variable - set via GitHub Secrets in CI/CD
+  repository: ""   # Set via --set image.repository in CI/CD
+  tag: latest      # GitHub Actions updates this
+  pullPolicy: Always
+
+replicaCount: 2
+
+ingress:
+  enabled: true
+  className: nginx
+  host: yourdomain.com    # ✅ Replace with real domain!
+  tls: true
+  tlsSecret: fashion-hub-tls
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  cpuUtilization: 70
+  memoryUtilization: 80
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+healthCheck:
+  path: /api/health
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+# ✅ Complete config for prod
+config:
+  NODE_ENV: production
+  NEXT_TELEMETRY_DISABLED: "1"
+  NEXT_PUBLIC_BASE_URL: "https://yourdomain.com"
+  NEXT_PUBLIC_SANITY_DATASET: "production"
+  # ✅ These get filled by CI/CD - not hardcoded!
+  NEXT_PUBLIC_SANITY_PROJECT_ID: ""
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ""
+  NEXT_PUBLIC_CLERK_SIGN_IN_URL: "/sign-in"
+  NEXT_PUBLIC_CLERK_SIGN_UP_URL: "/sign-up"
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: "/"
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL: "/"
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ""

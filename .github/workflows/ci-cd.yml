@@ -1,0 +1,227 @@
+# ============================================
+# ShopCart - CI/CD Pipeline
+# ============================================
+name: ShopCart CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REPOSITORY: fashion-hub-app
+
+jobs:
+  # ============================================
+  # JOB 1: CODE QUALITY & SECURITY
+  # ============================================
+  quality-assurance:
+    name: 🔍 Quality & Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 🔍 TypeScript Type Check
+        run: npx tsc --noEmit
+
+      - name: 🧹 ESLint Check
+        run: npm run lint
+
+      - name: 📊 SonarQube Analysis
+        uses: SonarSource/sonarqube-scan-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+        continue-on-error: true
+
+      - name: 🔒 Trivy Filesystem Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-fs-results.sarif
+          severity: 'CRITICAL,HIGH'
+        continue-on-error: true
+
+      - name: 📤 Upload Trivy FS Results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-fs-results.sarif
+        continue-on-error: true
+
+  # ============================================
+  # JOB 2: BUILD & PUSH (only on push, not PR)
+  # ============================================
+  build-and-push:
+    name: 🐳 Build & Push to ECR
+    runs-on: ubuntu-latest
+    needs: quality-assurance
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+      id-token: write
+
+    outputs:
+      image-tag: ${{ github.sha }}
+      ecr-registry: ${{ steps.login-ecr.outputs.registry }}
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-ecr-push
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: 🔑 Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: 🏗️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🐳 Build, Tag & Push to ECR
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.ref_name }}-latest
+          build-args: |
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_SANITY_PROJECT_ID=${{ secrets.NEXT_PUBLIC_SANITY_PROJECT_ID }}
+            NEXT_PUBLIC_SANITY_DATASET=${{ secrets.NEXT_PUBLIC_SANITY_DATASET }}
+            NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_BASE_URL=${{ secrets.NEXT_PUBLIC_BASE_URL }}
+            NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL=${{ secrets.NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🔒 Trivy Image Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+          format: sarif
+          output: trivy-image-results.sarif
+          severity: 'CRITICAL,HIGH'
+        continue-on-error: true
+
+      - name: 📤 Upload Trivy Image Results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-image-results.sarif
+        continue-on-error: true
+
+  # ============================================
+  # JOB 3: DEPLOY - Only on main branch
+  # ============================================
+  deploy:
+    name: 🚀 Deploy via ArgoCD
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      # ✅ ADDED - Configure AWS so kubectl works with EKS
+      - name: 🔐 Configure AWS Credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-ecr-push
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ✅ ADDED - Connect kubectl to your EKS cluster
+      - name: ☸️ Setup Kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig \
+            --region ${{ env.AWS_REGION }} \
+            --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+      # ✅ FIXED - Correct file path + create namespace first
+      - name: 🏷️ Update Helm Image Tag
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          # ✅ FIXED path - points to correct file
+          sed -i "s/^\(\s*tag:\s*\).*/\1${{ github.sha }}/" helm/charts/next-js/values-prod.yaml
+
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git add helm/charts/next-js/values-prod.yaml
+            git commit -m "chore: update image tag to ${{ github.sha }} [skip ci]"
+            git push origin main
+          fi
+
+      # ✅ FIXED - Correct indentation + namespace + secret name
+      - name: 🔐 Create Kubernetes Secrets
+        run: |
+          # Create namespace if not exists
+          kubectl create namespace fashion-hub-prod \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          # ✅ Secret name matches what Helm expects
+          # Check your _helpers.tpl for exact fullname
+          kubectl create secret generic fashion-hub-nextjs-secrets \
+            --namespace=fashion-hub-prod \
+            --from-literal=CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }} \
+            --from-literal=STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          echo "✅ Secrets injected into Kubernetes"
+
+      - name: 🔄 Trigger ArgoCD Sync
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.ARGOCD_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.ARGOCD_SERVER }}/api/v1/applications/fashion-hub-prod/sync" \
+            -d '{"prune": false, "dryRun": false}'
+        continue-on-error: true
+
+      - name: 💬 Notify Slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "${{ job.status == 'success' && '✅' || '❌' }} ShopCart Deployment ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*ShopCart* deployment to production\n*Status:* ${{ job.status }}\n*Commit:* `${{ github.sha }}`\n*Branch:* `${{ github.ref_name }}`\n*Author:* ${{ github.actor }}\n*Message:* ${{ github.event.head_commit.message }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        continue-on-error: true

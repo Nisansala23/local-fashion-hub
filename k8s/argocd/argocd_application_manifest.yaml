@@ -1,0 +1,121 @@
+# k8s/argocd/argocd_application_manifest.yaml
+
+# ══════════════════════════════════════════════════════════════
+# PRODUCTION Application
+# ══════════════════════════════════════════════════════════════
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fashion-hub-prod
+  namespace: argocd
+  labels:
+    app: fashion-hub
+    environment: production
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    # ✅ Notifications
+    notifications.argoproj.io/subscribe.on-sync-succeeded.slack: deployments
+    notifications.argoproj.io/subscribe.on-sync-failed.slack: alerts
+
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/Nisansala23/local-fashion-hub.git
+    targetRevision: main
+    # ✅ Path to Helm chart
+    path: helm/charts/next-js
+
+    helm:
+      releaseName: fashion-hub
+      # ✅ FIXED - valueFiles inside chart path only!
+      valueFiles:
+        - values.yaml          # default values
+        - values-prod.yaml     # ✅ Now exists inside chart folder!
+
+  # ✅ FIXED - Correct namespace!
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fashion-hub-prod
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - RespectIgnoreDifferences=true
+      - ServerSideApply=true    # ✅ ADDED - Better conflict handling
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  # ✅ CORRECT - Ignore replicas in prod (HPA manages them)
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
+    # ✅ ADDED - Ignore secret data (managed by CI/CD)
+    - group: ""
+      kind: Secret
+      jsonPointers:
+        - /data
+
+---
+# ══════════════════════════════════════════════════════════════
+# DEVELOPMENT Application
+# ══════════════════════════════════════════════════════════════
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: fashion-hub-dev
+  namespace: argocd
+  labels:
+    app: fashion-hub
+    environment: development
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/Nisansala23/local-fashion-hub.git
+    # ✅ Watch main branch (change to 'develop' if that branch exists)
+    targetRevision: main
+    path: helm/charts/next-js
+
+    helm:
+      releaseName: fashion-hub-dev
+      # ✅ FIXED - valueFiles inside chart path only!
+      valueFiles:
+        - values.yaml         # default values
+        - values-dev.yaml     # ✅ Now exists inside chart folder!
+
+  # ✅ FIXED - Correct namespace!
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: fashion-hub-dev
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 3              # ✅ Less retries in dev
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 1m     # ✅ Shorter max in dev
+
+  # ✅ No ignoreDifferences in dev
+  # HPA is disabled in dev so no replica conflicts

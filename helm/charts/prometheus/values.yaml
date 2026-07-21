@@ -1,0 +1,42 @@
+kube-prometheus-stack:
+
+  # ── Grafana ──
+  grafana:
+    enabled: true
+    adminPassword: "admin123"        # Change in prod!
+    ingress:
+      enabled: true
+      ingressClassName: nginx
+      hosts:
+        - grafana.myapp.com
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
+  # ── Prometheus ──
+  prometheus:
+    prometheusSpec:
+      retention: 15d                 # Keep 15 days of metrics
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: 500m
+          memory: 1Gi
+
+  # ── AlertManager ──
+  alertmanager:
+    enabled: true
+
+  # ── Node Exporter ──
+  nodeExporter:
+    enabled: true
+
+  # ── Kube State Metrics ──
+  kubeStateMetrics:
+    enabled: true

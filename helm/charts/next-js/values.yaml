@@ -1,0 +1,82 @@
+# ══════════════════════════════════════════════════════════════
+# DEFAULT HELM VALUES - Fashion Hub Next.js Application
+# ══════════════════════════════════════════════════════════════
+
+app:
+  name: fashion-hub
+  namespace: fashion-hub  # ✅ Use dedicated namespace, not default!
+
+# Docker Image Configuration
+image:
+  # ✅ Use variable - real value set in prod/dev values
+  repository: ""  # Set in helm/values/prod.yaml
+  tag: latest
+  pullPolicy: Always  # ✅ Always pull in prod for latest image
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3000
+
+ingress:
+  enabled: true
+  className: nginx
+  host: fashion-hub.local
+  tls: false
+  tlsSecret: ""
+  annotations: {}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi   # ✅ Increased - Next.js needs more than 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi   # ✅ Increased for safety
+
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  cpuUtilization: 70
+  memoryUtilization: 80
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+# ✅ Fixed health check path
+healthCheck:
+  path: /api/health
+  initialDelaySeconds: 30   # ✅ Increased - Next.js needs time to start
+  periodSeconds: 10
+
+# ══════════════════════════════════════════════════════════════
+# PUBLIC CONFIGURATION (ConfigMap - safe to commit)
+# ══════════════════════════════════════════════════════════════
+config:
+  NODE_ENV: production
+  NEXT_TELEMETRY_DISABLED: "1"
+  NEXT_PUBLIC_BASE_URL: "http://fashion-hub.local"
+  NEXT_PUBLIC_SANITY_PROJECT_ID: ""
+  NEXT_PUBLIC_SANITY_DATASET: "production"
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ""
+  NEXT_PUBLIC_CLERK_SIGN_IN_URL: "/sign-in"
+  NEXT_PUBLIC_CLERK_SIGN_UP_URL: "/sign-up"
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: "/"
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL: "/"
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ""
+
+# ✅ REMOVED secrets from values.yaml!
+# Secrets are now managed by GitHub Actions
+# and injected directly into Kubernetes Secrets
+# via CI/CD pipeline - NOT stored in Git!
+
+serviceAccount:
+  create: true
+  name: ""
+
+nameOverride: ""
+fullnameOverride: ""

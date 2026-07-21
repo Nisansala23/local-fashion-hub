@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "nextjs.fullname" . }}-config
+  namespace: {{ .Values.app.namespace }}
+  labels:
+    {{- include "nextjs.labels" . | nindent 4 }}
+data:
+  # Application Environment
+  NODE_ENV: {{ .Values.config.NODE_ENV | quote }}
+  NEXT_TELEMETRY_DISABLED: {{ .Values.config.NEXT_TELEMETRY_DISABLED | quote }}
+  
+  # Base URL for API calls
+  NEXT_PUBLIC_BASE_URL: {{ .Values.config.NEXT_PUBLIC_BASE_URL | quote }}
+  
+  # Sanity CMS Configuration
+  NEXT_PUBLIC_SANITY_PROJECT_ID: {{ .Values.config.NEXT_PUBLIC_SANITY_PROJECT_ID | quote }}
+  NEXT_PUBLIC_SANITY_DATASET: {{ .Values.config.NEXT_PUBLIC_SANITY_DATASET | quote }}
+  
+  # Clerk Authentication (Public keys only - secrets in Secret)
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: {{ .Values.config.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY | quote }}
+  NEXT_PUBLIC_CLERK_SIGN_IN_URL: {{ .Values.config.NEXT_PUBLIC_CLERK_SIGN_IN_URL | default "/" | quote }}
+  NEXT_PUBLIC_CLERK_SIGN_UP_URL: {{ .Values.config.NEXT_PUBLIC_CLERK_SIGN_UP_URL | default "/" | quote }}
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: {{ .Values.config.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL | default "/" | quote }}
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL: {{ .Values.config.NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL | default "/" | quote }}
+  
+  # Stripe (Public key only - secret in Secret)
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: {{ .Values.config.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY | quote }}
+  
+  # Optional: API URL if you have a backend
+  {{- if .Values.config.NEXT_PUBLIC_API_URL }}
+  NEXT_PUBLIC_API_URL: {{ .Values.config.NEXT_PUBLIC_API_URL | quote }}
+  {{- end }}

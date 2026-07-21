@@ -1,0 +1,15 @@
+# helm/charts/next-js/templates/pdb.yaml
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "nextjs.fullname" . }}
+  namespace: {{ .Values.app.namespace }}
+  labels:
+    {{- include "nextjs.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "nextjs.selectorLabels" . | nindent 6 }}
+{{- end }}

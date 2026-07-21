@@ -1,0 +1,55 @@
+# ══════════════════════════════════════════════════════════════
+# DEV VALUES - Overrides for Development Environment
+# ══════════════════════════════════════════════════════════════
+
+app:
+  namespace: fashion-hub-dev
+
+image:
+  # ✅ Use variable - set via GitHub Secrets in CI/CD
+  repository: ""   # Set via --set image.repository in CI/CD
+  tag: develop-latest
+  pullPolicy: Always
+
+replicaCount: 1
+
+ingress:
+  enabled: true
+  className: nginx
+  host: dev.fashion-hub.local
+  tls: false
+  annotations: {}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+hpa:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: false
+
+healthCheck:
+  path: /api/health
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+# ✅ Complete config for dev
+config:
+  NODE_ENV: development
+  NEXT_TELEMETRY_DISABLED: "1"
+  NEXT_PUBLIC_BASE_URL: "http://dev.fashion-hub.local"
+  NEXT_PUBLIC_SANITY_DATASET: "development"
+  # ✅ These get filled by CI/CD - not hardcoded!
+  NEXT_PUBLIC_SANITY_PROJECT_ID: ""
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ""
+  NEXT_PUBLIC_CLERK_SIGN_IN_URL: "/sign-in"
+  NEXT_PUBLIC_CLERK_SIGN_UP_URL: "/sign-up"
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: "/"
+  NEXT_PUBLIC_CLERK_AFTER_SIGN_OUT_URL: "/"
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ""

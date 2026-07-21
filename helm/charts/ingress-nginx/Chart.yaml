@@ -1,0 +1,11 @@
+# helm/charts/ingress-nginx/Chart.yaml
+apiVersion: v2
+name: ingress-nginx
+description: NGINX Ingress Controller configuration
+type: application
+version: 1.0.0
+
+dependencies:
+  - name: ingress-nginx
+    version: "4.11.0"       # ✅ Updated to latest stable
+    repository: "https://kubernetes.github.io/ingress-nginx"
