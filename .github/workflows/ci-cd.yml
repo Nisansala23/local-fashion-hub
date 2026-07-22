@@ -190,16 +190,18 @@ jobs:
           kubectl create namespace fashion-hub-prod \
             --dry-run=client -o yaml | kubectl apply -f -
 
-          # ✅ Secret name matches what Helm expects
-          # Check your _helpers.tpl for exact fullname
-          kubectl delete secret fashion-hub-nextjs-secrets --namespace=fashion-hub-prod --ignore-not-found=true && kubectl create secret generic fashion-hub-nextjs-secrets \
+          # Delete old secret if exists
+          kubectl delete secret fashion-hub-nextjs-secrets \
+            --namespace=fashion-hub-prod \
+            --ignore-not-found=true
+
+          # Create new secret
+          kubectl create secret generic fashion-hub-nextjs-secrets \
             --namespace=fashion-hub-prod \
             --from-literal=CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }} \
-            --from-literal=STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} \
-            --dry-run=client -o yaml | kubectl apply -f -
+            --from-literal=STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
 
           echo "✅ Secrets injected into Kubernetes"
-
       - name: 🔄 Trigger ArgoCD Sync
         run: |
           curl -X POST \
