@@ -24,7 +24,6 @@ spec:
         prometheus.io/port: "3000"
         prometheus.io/path: "/metrics"
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
     spec:
       serviceAccountName: {{ include "nextjs.serviceAccountName" . }}
       securityContext:
