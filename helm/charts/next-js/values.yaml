@@ -9,7 +9,7 @@ app:
 # Docker Image Configuration
 image:
   # ✅ Use variable - real value set in prod/dev values
-  repository: ""  # Set in helm/values/prod.yaml
+  repository: "887401460535.dkr.ecr.ap-south-1.amazonaws.com/fashion-hub-app"  # Set in helm/values/prod.yaml
   tag: latest
   pullPolicy: Always  # ✅ Always pull in prod for latest image
 

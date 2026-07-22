@@ -7,7 +7,7 @@ app:
 
 image:
   # ✅ Use variable - set via GitHub Secrets in CI/CD
-  repository: ""   # Set via --set image.repository in CI/CD
+  repository: "887401460535.dkr.ecr.ap-south-1.amazonaws.com/fashion-hub-app"   # Set via --set image.repository in CI/CD
   tag: develop-latest
   pullPolicy: Always
 
