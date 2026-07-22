@@ -192,7 +192,7 @@ jobs:
 
           # ✅ Secret name matches what Helm expects
           # Check your _helpers.tpl for exact fullname
-          kubectl create secret generic fashion-hub-nextjs-secrets \
+          kubectl delete secret fashion-hub-nextjs-secrets --namespace=fashion-hub-prod --ignore-not-found=true && kubectl create secret generic fashion-hub-nextjs-secrets \
             --namespace=fashion-hub-prod \
             --from-literal=CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }} \
             --from-literal=STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }} \
