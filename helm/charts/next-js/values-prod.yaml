@@ -8,7 +8,7 @@ app:
 image:
   # ✅ Use variable - set via GitHub Secrets in CI/CD
   repository: ""   # Set via --set image.repository in CI/CD
-  tag: latest      # GitHub Actions updates this
+  tag: cd64a7b352f4cfba4cf8589e43ecdfdf708431c0
   pullPolicy: Always
 
 replicaCount: 2
