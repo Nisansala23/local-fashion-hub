@@ -8,7 +8,7 @@ app:
 image:
   # ✅ Use variable - set via GitHub Secrets in CI/CD
   repository: ""   # Set via --set image.repository in CI/CD
-  tag: cd64a7b352f4cfba4cf8589e43ecdfdf708431c0
+  tag: 5d8eade29e0d29acb58b33a88af7a7c14f996e8c
   pullPolicy: Always
 
 replicaCount: 2
