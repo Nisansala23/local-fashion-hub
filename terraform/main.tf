@@ -1,85 +1,99 @@
-# terraform/variables.tf
+# terraform/main.tf
 
-variable "aws_region" {
-  description = "AWS Region"
-  type        = string
-  default     = "ap-south-1"
-}
+# ============================================
+# VPC
+# ============================================
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~> 5.0"
 
-variable "environment" {
-  description = "Environment (dev/staging/production)"
-  type        = string
-  validation {
-    condition     = contains(["dev", "staging", "production"], var.environment)
-    error_message = "Environment must be dev, staging, or production."
+  name = "${local.project}-vpc"
+  cidr = var.vpc_cidr
+
+  azs             = ["${var.aws_region}a", "${var.aws_region}b"]
+  private_subnets = var.private_subnet_cidrs
+  public_subnets  = var.public_subnet_cidrs
+
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  public_subnet_tags = {
+    "kubernetes.io/role/elb" = 1
   }
+
+  private_subnet_tags = {
+    "kubernetes.io/role/internal-elb" = 1
+  }
+
+  tags = local.common_tags
 }
 
-variable "vpc_cidr" {
-  description = "VPC CIDR block"
-  type        = string
-  default     = "10.0.0.0/16"
+# ============================================
+# ECR Repository
+# ============================================
+resource "aws_ecr_repository" "app" {
+  name                 = "${local.project}-app"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = local.common_tags
 }
 
-variable "private_subnet_cidrs" {
-  description = "Private subnet CIDR blocks"
-  type        = list(string)
-  default     = ["10.0.1.0/24", "10.0.2.0/24"]
+resource "aws_ecr_lifecycle_policy" "app" {
+  repository = aws_ecr_repository.app.name
+
+  policy = jsonencode({
+    rules = [{
+      rulePriority = 1
+      description  = "Keep last 10 images"
+      selection = {
+        tagStatus   = "any"
+        countType   = "imageCountMoreThan"
+        countNumber = 10
+      }
+      action = {
+        type = "expire"
+      }
+    }]
+  })
 }
 
-variable "public_subnet_cidrs" {
-  description = "Public subnet CIDR blocks"
-  type        = list(string)
-  default     = ["10.0.101.0/24", "10.0.102.0/24"]
-}
+# ============================================
+# EKS Cluster
+# ============================================
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 20.0"
 
-variable "kubernetes_version" {
-  description = "Kubernetes version"
-  type        = string
-  default     = "1.30"
-}
+  cluster_name    = "${local.project}-cluster"
+  cluster_version = var.kubernetes_version
 
-variable "node_instance_type" {
-  description = "EC2 instance type for worker nodes"
-  type        = string
-  default     = "t3.medium"
-}
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
 
-variable "node_min_size" {
-  description = "Minimum worker nodes"
-  type        = number
-  default     = 2
-}
+  cluster_endpoint_public_access = true
 
-variable "node_max_size" {
-  description = "Maximum worker nodes"
-  type        = number
-  default     = 4
-}
+  eks_managed_node_groups = {
+    main = {
+      instance_types = [var.node_instance_type]
+      min_size       = var.node_min_size
+      max_size       = var.node_max_size
+      desired_size   = var.node_desired_size
 
-variable "node_desired_size" {
-  description = "Desired worker nodes"
-  type        = number
-  default     = 2
-}
+      labels = {
+        Environment = var.environment
+      }
 
-# ✅ ADDED - Was used in argocd.tf but never defined!
-variable "domain_name" {
-  description = "Root domain name for the application"
-  type        = string
-  # Example: "fashionhub.com"
-}
+      tags = local.common_tags
+    }
+  }
 
-# ✅ ADDED - Was used in argocd.tf but never defined!
-variable "github_personal_access_token" {
-  description = "GitHub PAT for ArgoCD repository access"
-  type        = string
-  sensitive   = true  # ✅ Marked sensitive - won't show in logs!
-}
+  enable_irsa = true
 
-# ✅ ADDED - GitHub org/repo for OIDC
-variable "github_repo" {
-  description = "GitHub repository in format org/repo"
-  type        = string
-  default     = "Nisansala23/local-fashion-hub"
+  tags = local.common_tags
 }

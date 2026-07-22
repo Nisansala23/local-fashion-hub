@@ -82,10 +82,10 @@ resource "kubernetes_secret" "github_repo" {
   }
 
   data = {
-    type     = base64encode("git")
-    url      = base64encode("https://github.com/${var.github_repo}.git")
-    password = base64encode(var.github_personal_access_token)
-    username = base64encode("git")
+    type     = "git"
+    url      = "https://github.com/${var.github_repo}.git"
+    password = var.github_personal_access_token
+    username = "git"
   }
 
   type       = "Opaque"
